@@ -7,6 +7,9 @@ import ElementUI from 'element-ui'
 // 导入ElementUI的样式
 import 'element-ui/lib/theme-chalk/index.css'
 
+// 导入公共样式
+import '@/assets/common.css'
+
 // 使用elementUI这个插件
 Vue.use(ElementUI)
 
