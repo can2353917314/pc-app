@@ -98,7 +98,7 @@ export default {
 }
 </script>
 
-<style lang="less">
+<style lang="less" scoped>
 /*
   vue脚手架给我们配置了less的配置，但是并没有安装less 和 less-loader
   yarn add less less-loader -D
