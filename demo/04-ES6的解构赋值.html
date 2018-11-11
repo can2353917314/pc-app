@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+<script>
+
+  // let n1 = 1
+  // let n2 = 2
+  // let n3 = 3
+
+  // 解构赋值  解构数组, 解构遵循的是一一对应
+  let [n1, n2, n3] = [1, 2, 3, 4]
+  console.log(n1)
+  console.log(n2)
+  console.log(n3)
+
+  // 对象的解构
+  let obj = {
+    meta: '呵呵',
+    data: '哈哈'
+  }
+
+  // 解构对象的基本用法
+  // let {meta, data} = obj
+  // console.log(meta, data)
+  // 解构出来的变量名是后面的 前面的属性名是用来进行匹配的
+  // let {name: name1, age: age1} = {name: 'zs', age: 18}
+  // console.log(name1, age1)
+  // 解构起别名
+  // console.log(name1, age1)
+
+  let res = {
+    meta: {
+      status: 200,
+      msg: '哈哈'
+    },
+    data: {
+      total: 1000,
+      user: 'zs'
+    }
+  }
+
+  // 解构
+  // let {meta: {status}, data: {total, user}} = res
+  // console.log(status)
+  // console.log(total)
+  // console.log(user)
+
+
+  // 函数参数的解构
+  function fn ({meta, data}) {
+    console.log(meta, data)
+  }
+
+  fn(res)
+
+</script>
+</body>
+</html>

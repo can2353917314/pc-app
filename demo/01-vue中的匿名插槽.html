@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <!-- 如果组件内部没有slot，组件内部的内容会被丢弃的 -->
+    <!-- <slot></slot>: 匿名插槽，没有名字插槽 -->
+    <div id="app">
+      <modal>
+        <template>确定要退出吗</template>
+      </modal>
+    </div>
+
+    <script src="../node_modules/vue/dist/vue.js"></script>
+    <script>
+      Vue.component('modal', {
+        template: `
+          <div>
+            <h3>标题</h3>
+            <div><slot></slot></div>
+            <button>关闭</button>
+          </div>
+        `
+      })
+
+      const vm = new Vue({
+        el: '#app',
+        data: {
+          msg: 'hello vue'
+        }
+      })
+    </script>
+  </body>
+</html>
