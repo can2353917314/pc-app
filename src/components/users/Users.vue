@@ -55,7 +55,7 @@
         <template slot-scope="scope">
           <el-button size="small" plain type="primary" icon="el-icon-edit" @click="showEditDialog(scope.row)"></el-button>
           <el-button size="small" plain type="danger" icon="el-icon-delete" @click="delUser(scope.row.id)"></el-button>
-          <el-button size="small" plain type="success" icon="el-icon-check">分配角色</el-button>
+          <el-button size="small" plain type="success" icon="el-icon-check" @click="showAssignDialog(scope.row)">分配角色</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -130,6 +130,29 @@
         <el-button type="primary" @click="editUser">确 定</el-button>
       </span>
     </el-dialog>
+
+    <!-- 分配角色对话框 -->
+      <el-dialog title="分配角色" :visible.sync="assignDialogVisible" width="40%">
+      <el-form ref="assignForm" :rules="rules" :model="assignForm" label-width="80px">
+        <el-form-item label="用户名" prop="username">
+          <el-tag type="info">{{assignForm.username}}</el-tag>
+        </el-form-item>
+        <el-form-item label="角色列表" prop="rid">
+          <el-select v-model="assignForm.rid" placeholder="请选择">
+            <el-option
+              v-for="item in roleList"
+              :key="item.id"
+              :label="item.roleName"
+              :value="item.id">
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="assignDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="assignRole">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -171,8 +194,13 @@ export default {
           { type: 'email', message: '请输入正确格式的邮箱', trigger: 'blur' }
         ],
         mobile: [
-          { pattern: /^1\d{10}$/, message: '请输入正确的手机号', trigger: 'blur' }
-        ]
+          {
+            pattern: /^1\d{10}$/,
+            message: '请输入正确的手机号',
+            trigger: 'blur'
+          }
+        ],
+        rid: [{ required: true, message: '请选择角色', trigger: 'blur' }]
       },
       // 控制编辑用户的数据
       editDialogVisible: false,
@@ -181,14 +209,34 @@ export default {
         username: '',
         email: '',
         mobile: ''
-      }
+      },
+      assignDialogVisible: false,
+      assignForm: {
+        id: '',
+        username: '',
+        rid: ''
+      },
+      // 角色列表
+      roleList: []
     }
   },
   methods: {
+    // 获取所有的角色列表信息
+    async getRoleList() {
+      let res = await this.axios.get('roles')
+      // console.log(res)
+      let {
+        meta: { status },
+        data
+      } = res
+      if (status === 200) {
+        this.roleList = data
+      }
+    },
     // 获取用户列表信息
-    getUserList() {
+    async getUserList() {
       // 发送ajax请求，获取用户列表数据
-      this.axios({
+      let res = await this.axios({
         method: 'get',
         // baseURL: BASE_URL,
         url: 'users',
@@ -197,14 +245,16 @@ export default {
           pagenum: this.currentPage,
           pagesize: this.pageSize
         }
-      }).then(res => {
-        // console.log(res)
-        let {meta: {status}, data: {users, total}} = res
-        if (status === 200) {
-          this.userList = users
-          this.total = total
-        }
       })
+      // console.log(res)
+      let {
+        meta: { status },
+        data: { users, total }
+      } = res
+      if (status === 200) {
+        this.userList = users
+        this.total = total
+      }
     },
     handleCurrentChange(val) {
       // val就是当前页
@@ -230,46 +280,45 @@ export default {
       this.getUserList()
     },
     // 删除用户
-    delUser(id) {
-      // console.log(id)
-      this.$confirm('你确定要删除这个用户吗？', '警告', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        this.axios({
+    async delUser(id) {
+      try {
+        // console.log(id)
+        await this.$confirm('你确定要删除这个用户吗？', '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        let res = await this.axios({
           method: 'delete',
           // baseURL: BASE_URL,
           url: `users/${id}`
-        }).then(res => {
-          if (res.meta.status === 200) {
-            // 1. 重新渲染
-            if (this.userList.length === 1 && this.currentPage > 1) {
-              this.currentPage--
-            }
-            this.getUserList()
-            // 2. 提示删除成功,  问题：如果当前页只有一条数据的时候，页码值-1
-            this.$message.success('删除成功了')
-          }
         })
-      }).catch(() => {
-        this.$message.error('你取消了删除操作')
-      })
+        if (res.meta.status === 200) {
+          // 1. 重新渲染
+          if (this.userList.length === 1 && this.currentPage > 1) {
+            this.currentPage--
+          }
+          this.getUserList()
+          // 2. 提示删除成功,  问题：如果当前页只有一条数据的时候，页码值-1
+          this.$message.success('删除成功了')
+        }
+      } catch (e) {
+        this.$message.error('取消删除')
+      }
     },
     // 修改用户的状态
-    changeState({id, mg_state: mgState}) {
+    async changeState({ id, mg_state: mgState }) {
       // 发送ajax请求
-      this.axios({
+      let res = await this.axios({
         // baseURL: BASE_URL,
         url: `users/${id}/state/${mgState}`,
         method: 'put'
-      }).then(res => {
-        if (res.meta.status === 200) {
-          this.$message.success('修改状态成功了')
-        } else {
-          this.$message.error('修改状态失败了')
-        }
       })
+      if (res.meta.status === 200) {
+        this.$message.success('修改状态成功了')
+      } else {
+        this.$message.error('修改状态失败了')
+      }
     },
     // 显示添加的对话框
     showAddDialog() {
@@ -278,31 +327,28 @@ export default {
     },
     // 添加用户
     addUser() {
-      this.$refs.addForm.validate(valid => {
+      this.$refs.addForm.validate(async valid => {
         if (!valid) return false
         // 成功
-        this.axios({
+        let res = await this.axios({
           method: 'post',
           url: 'users',
           data: this.addForm
-        }).then(res => {
-          console.log(res)
-          let {meta: {status}} = res
-          if (status === 201) {
-            // 重新渲染最后一页
-            this.total++
-            this.currentPage = Math.ceil(this.total / this.pageSize)
-
-            // 重新渲染
-            this.getUserList()
-
-            // 隐藏模块框
-            this.addDialogVisible = false
-
-            // 清空表单
-            this.$refs.addForm.resetFields()
-          }
         })
+        let {
+          meta: { status }
+        } = res
+        if (status === 201) {
+          // 重新渲染最后一页
+          this.total++
+          this.currentPage = Math.ceil(this.total / this.pageSize)
+          // 重新渲染
+          this.getUserList()
+          // 隐藏模块框
+          this.addDialogVisible = false
+          // 清空表单
+          this.$refs.addForm.resetFields()
+        }
       })
     },
     // 显示修改用户对话框
@@ -316,38 +362,75 @@ export default {
     },
     // 修改用户
     editUser() {
-      this.$refs.editForm.validate(valid => {
+      this.$refs.editForm.validate(async valid => {
         if (!valid) return false
-        this.axios({
+        let res = await this.axios({
           method: 'put',
           url: `users/${this.editForm.id}`,
           data: this.editForm
-        }).then(res => {
-          console.log(res)
-          let {meta: {status}} = res
-          if (status === 200) {
-            this.getUserList()
-            // 重置
-            this.$refs.editForm.resetFields()
-            // 隐藏
-            this.editDialogVisible = false
-          }
         })
+        let {
+          meta: { status }
+        } = res
+        if (status === 200) {
+          this.getUserList()
+          // 重置
+          this.$refs.editForm.resetFields()
+          // 隐藏
+          this.editDialogVisible = false
+        }
+      })
+    },
+    async showAssignDialog(role) {
+      console.log(role)
+      // 显示分配的对话框
+      this.assignDialogVisible = true
+
+      this.assignForm.id = role.id
+      this.assignForm.username = role.username
+      // 回显分配的数据, 回显角色id值
+      // 要根据用户的id获取角色的id
+      let res = await this.axios.get(`users/${role.id}`)
+      let {
+        meta: { status },
+        data: { rid }
+      } = res
+      if (status === 200) {
+        if (rid === -1) {
+          rid = ''
+        }
+        this.assignForm.rid = rid
+      }
+      // 获取角色列表
+      this.getRoleList()
+    },
+    assignRole() {
+      // 表单校验
+      this.$refs.assignForm.validate(async valid => {
+        if (!valid) return false
+        let { id, rid } = this.assignForm
+        let res = await this.axios.put(`users/${id}/role`, {
+          rid
+        })
+        if (res.meta.status === 200) {
+          this.assignDialogVisible = false
+          this.$refs.assignForm.resetFields()
+          this.getUserList()
+          this.$message.success('恭喜你，分配角色成功')
+        }
       })
     }
   },
   created() {
+    // this.$router : 整个路由对象  routes
+    // this.$route : 表示的是当前路由
+    // console.log(this.$route.params)
     this.getUserList()
   }
 }
 </script>
 
 <style lang="less" scoped>
-.el-breadcrumb {
-  height: 30px;
-  line-height: 30px;
-}
-
 .el-input {
   width: 400px;
   margin-bottom: 10px;

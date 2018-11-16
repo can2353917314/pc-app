@@ -8,8 +8,22 @@ import Login from '@/components/Login.vue'
 import Home from '@/components/Home.vue'
 
 // 导入Users组件
-import Users from '@/components/Users.vue'
-import List from '@/components/List.vue'
+import Users from '@/components/users/Users.vue'
+
+// 导入Rights组件
+import Rights from '@/components/rights/rights.vue'
+
+// 导入Roles组件
+import Roles from '@/components/rights/Roles.vue'
+
+// 导入商品分类组件
+import Categories from '@/components/products/Categories.vue'
+
+// 导入goods组件
+import Goods from '@/components/products/Goods.vue'
+
+// 导入商品添加组件
+import Add from '@/components/products/Add.vue'
 
 Vue.use(Router)
 
@@ -30,12 +44,29 @@ const router = new Router({
       // 嵌套路由2：给子路由配置一个出口
       children: [
         {
+          // 可以匹配 /users/xxx
           path: '/users',
           component: Users
         },
         {
-          path: '/list',
-          component: List
+          path: '/rights',
+          component: Rights
+        },
+        {
+          path: '/roles',
+          component: Roles
+        },
+        {
+          path: '/categories',
+          component: Categories
+        },
+        {
+          path: '/goods',
+          component: Goods
+        },
+        {
+          path: '/goods-add',
+          component: Add
         }
       ]
     }

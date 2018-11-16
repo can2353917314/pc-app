@@ -61,32 +61,33 @@ export default {
     },
     // 登录
     login() {
-      this.$refs.form.validate(valid => {
+      // await所在的函数必须使用async修饰
+      this.$refs.form.validate(async valid => {
         if (valid) {
           // 发送ajax请求
           // console.log('校验通过了')
-          axios({
+          let res = await axios({
             url: 'http://localhost:8888/api/private/v1/login',
             method: 'post',
             data: this.form
-          }).then(res => {
-            if (res.data.meta.status === 200) {
-              // 登录成功
-              this.$message.success('登录成功')
-              // 存储token
-              localStorage.setItem('token', res.data.data.token)
-              // 跳转到Home组件
-              this.$router.push('/home')
-            } else {
-              // 登录失败
-              // this.$message(res.data.meta.msg)
-              // this.$message({
-              //   message: res.data.meta.msg,
-              //   type: 'error'
-              // })
-              this.$message.error(res.data.meta.msg)
-            }
           })
+          console.log(res)
+          if (res.meta.status === 200) {
+            // 登录成功
+            this.$message.success('登录成功')
+            // 存储token
+            localStorage.setItem('token', res.data.token)
+            // 跳转到Home组件
+            this.$router.push('/home')
+          } else {
+            // 登录失败
+            // this.$message(res.data.meta.msg)
+            // this.$message({
+            //   message: res.data.meta.msg,
+            //   type: 'error'
+            // })
+            this.$message.error(res.meta.msg)
+          }
         } else {
           // 校验没通过
           console.log('没通过')

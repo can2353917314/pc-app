@@ -19,36 +19,22 @@
         <!-- unique-opened：最多只能打开一个子菜单 -->
         <!-- router:开启了路由模式， 当我们点击导航的时候，会发生路由的跳转, 跳转到index对应的路径 -->
         <el-menu
-          default-active="1"
+          :default-active="$route.path.slice(1).split('-')[0]"
           class="el-menu-vertical-demo"
           background-color="#545c64"
           text-color="#fff"
           active-text-color="#ffd04b"
           unique-opened
           router>
-          <el-submenu index="1">
+          <el-submenu v-for="menu in menuList" :key="menu.id" :index="menu.path">
             <template slot="title">
               <i class="el-icon-location"></i>
-              <span>用户管理</span>
+              <span>{{menu.authName}}</span>
             </template>
             <!-- 放菜单项 -->
-            <el-menu-item index="/users">
+            <el-menu-item v-for="item in menu.children" :index="item.path" :key="item.id">
               <i class="el-icon-menu"></i>
-              <span slot="title">用户列表</span>
-            </el-menu-item>
-          </el-submenu>
-          <el-submenu index="2">
-            <template slot="title">
-              <i class="el-icon-location"></i>
-              <span>权限管理</span>
-            </template>
-            <el-menu-item index="2-1">
-              <i class="el-icon-menu"></i>
-              <span slot="title">角色列表</span>
-            </el-menu-item>
-            <el-menu-item index="2-2">
-              <i class="el-icon-menu"></i>
-              <span slot="title">权限列表</span>
+              <span slot="title">{{item.authName}}</span>
             </el-menu-item>
           </el-submenu>
         </el-menu>
@@ -63,31 +49,46 @@
 
 <script>
 export default {
+  data() {
+    return {
+      menuList: []
+    }
+  },
   methods: {
     // 退出
-    logout() {
-      // 弹出模块框
-      // 参数1： 提示内容
-      // 参数2： 提示标题
-      this.$confirm('你确定要退出系统吗？', '温馨提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      })
-        .then(() => {
-          // 点击确认按钮
-          // 删除token
-          localStorage.removeItem('token')
-          // 跳转到login组件
-          this.$router.push('/login')
-          // 提示退出成功
-          this.$message.success('退出成功了')
+    async logout() {
+      try {
+        // 弹出模块框
+        // 参数1： 提示内容
+        // 参数2： 提示标题
+        await this.$confirm('你确定要退出系统吗？', '温馨提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
         })
-        .catch(() => {
-          // 点击取消按钮
-          this.$message.error('取消了退出操作')
-        })
+        // 成功了
+        // 点击确认按钮
+        // 删除token
+        localStorage.removeItem('token')
+        // 跳转到login组件
+        this.$router.push('/login')
+        // 提示退出成功
+        this.$message.success('退出成功了')
+      } catch (e) {
+        this.$message.error('取消删除')
+      }
     }
+  },
+  async created() {
+    let res = await this.axios.get('menus')
+    let {
+      meta: { status },
+      data
+    } = res
+    if (status === 200) {
+      this.menuList = data
+    }
+    // console.log(res)
   }
 }
 </script>
